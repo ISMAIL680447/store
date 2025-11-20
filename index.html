@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Firebase Libraries -->
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyC9-TIDjZgx2YjMMU7S5MIQet1pxz6G73Y",
+    authDomain: "mystore-5d7ce.firebaseapp.com",
+    databaseURL: "https://mystore-5d7ce-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "mystore-5d7ce",
+    storageBucket: "mystore-5d7ce.firebasestorage.app",
+    messagingSenderId: "36974710146",
+    appId: "1:36974710146:web:0086fe60572dc0b1c2539b"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+</script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Commerce</title>
+  <style>
+    body { margin:0; font-family:Arial; background:#f1f3f6; }
+
+    .navbar {
+      background:#2874f0; color:#fff; padding:10px 20px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .navbar input {
+      width:50%; padding:8px; border:none; border-radius:2px;
+    }
+
+    .banner img { width:100%; border-radius:4px; }
+    .banner { padding:10px; }
+
+    .categories {
+      display:flex; overflow-x:auto; gap:15px;
+      padding:10px; background:#fff; margin:10px; border-radius:6px;
+    }
+    .cat { text-align:center; min-width:80px; cursor:pointer; }
+    .cat img { width:70px; height:70px; object-fit:cover; border-radius:50%; }
+
+    .section {
+      background:#fff; margin:10px; padding:10px; border-radius:6px;
+    }
+    .products {
+      display:flex; overflow-x:auto; gap:15px; padding:10px 0;
+    }
+    .card {
+      min-width:160px; border:1px solid #eee;
+      border-radius:6px; padding:10px; text-align:center;
+      background:#fff;
+    }
+    .card img {
+      width:100%; height:130px; object-fit:contain;
+    }
+    .price { color:green; font-weight:bold; }
+
+    @media(max-width:600px){
+      .navbar input { width:60%; }
+      .card { min-width:140px; }
+    }
+  </style>
+</head>
+
+<body>
+<div id="products-container" style="
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+"></div>
+
+
+<div class="navbar">
+  <h2>Shopi</h2>
+  <input type="text" placeholder="Search for products" />
+</div>
+
+<div class="banner">
+  <img src="https://via.placeholder.com/1200x350" alt="Banner">
+</div>
+
+<!-- Categories -->
+<div class="categories">
+  <div class="cat" onclick="showCategory('mobile')">
+    <img src="https:https://share.google/images/0oI0E1qs76Okxmimp">
+    <p>Mobiles</p>
+  </div>
+
+  <div class="cat" onclick="showCategory('fashion')">
+    <img src="https://share.google/images/0oI0E1qs76Okxmimp/100">
+    <p>Fashion</p>
+  </div>
+
+  <div class="cat" onclick="showCategory('electronics')">
+    <img src="https://via.placeholder.com/100">
+    <p>Electronics</p>
+  </div>
+
+  <div class="cat" onclick="showCategory('kitchen')">
+    <img src="https://via.placeholder.com/100">
+    <p>Kitchen</p>
+  </div>
+
+  <div class="cat" onclick="showCategory('beauty')">
+    <img src="https://via.placeholder.com/100">
+    <p>Beauty</p>
+  </div>
+</div>
+
+<!-- Product Section -->
+<div class="section">
+  <h3 id="sectionTitle">Best Deals</h3>
+  <div class="products" id="productList"></div>
+</div>
+
+<script>
+function loadAllProducts() {
+    let products = JSON.parse(localStorage.getItem("products") || "[]");
+    displayProducts(products, "Best Deals");
+}
+
+function displayProducts(list, title) {
+    document.getElementById("sectionTitle").innerText = title;
+    let box = document.getElementById("productList");
+    box.innerHTML = "";
+
+    if (list.length === 0) {
+      box.innerHTML = "<p style='padding:10px;color:#777;'>No products found</p>";
+      return;
+    }
+
+    list.forEach(p => {
+      box.innerHTML += `
+        <div class="card">
+          <img src="${p.img}">
+          <p>${p.name}</p>
+          <p class="price">₹${p.price}</p>
+        </div>
+      `;
+    });
+}
+
+function showCategory(cat) {
+    let products = JSON.parse(localStorage.getItem("products") || "[]");
+    let filtered = products.filter(p => p.category === cat);
+    displayProducts(filtered, cat.toUpperCase());
+}
+
+loadAllProducts();
+</script>
+<script>
+  const db = firebase.database().ref("products");
+
+  db.on("value", snapshot => {
+    const container = document.getElementById("products-container");
+    container.innerHTML = "";
+
+    snapshot.forEach(child => {
+      const product = child.val();
+
+      const card = `
+        <div style="
+          width: 200px;
+          border: 1px solid #ddd; 
+          border-radius: 10px; 
+          padding: 10px; 
+          text-align: center;
+          background: #fff;">
+          
+          <img src="${product.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
+          
+          <h3 style="font-size: 18px; margin: 10px 0;">${product.name}</h3>
+          <p style="color: green; font-size: 16px;">₹${product.price}</p>
+
+          <button style="
+            background: black;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;">
+            Add to Cart
+          </button>
+        </div>
+      `;
+
+      container.innerHTML += card;
+    });
+  });
+</script>
+
+
+</body>
+</html>
