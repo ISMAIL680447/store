@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Firebase Libraries -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Shopi — Premium Dark Store</title>
+
+<!-- Firebase (compat) -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
 <script>
+  // Firebase config — keep as-is
   const firebaseConfig = {
     apiKey: "AIzaSyC9-TIDjZgx2YjMMU7S5MIQet1pxz6G73Y",
     authDomain: "mystore-5d7ce.firebaseapp.com",
@@ -15,187 +20,493 @@
     messagingSenderId: "36974710146",
     appId: "1:36974710146:web:0086fe60572dc0b1c2539b"
   };
-
   firebase.initializeApp(firebaseConfig);
 </script>
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E-Commerce</title>
-  <style>
-    body { margin:0; font-family:Arial; background:#f1f3f6; }
+<style>
+  :root{
+    --bg-dark: #05060a;
+    --panel: rgba(255,255,255,0.03);
+    --card: #0b1220;
+    --glass: rgba(255,255,255,0.04);
+    --accent: #7c5cff;
+    --accent-2: #ff6a00;
+    --muted: #9aa3b2;
+    --white: #ffffff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter, system-ui, -apple-system, Roboto, "Segoe UI", Arial;
+    background: linear-gradient(180deg,#071026 0%, #0b1230 100%);
+    color:var(--white);
+    -webkit-font-smoothing:antialiased;
+  }
 
-    .navbar {
-      background:#2874f0; color:#fff; padding:10px 20px;
-      display:flex; justify-content:space-between; align-items:center;
-    }
-    .navbar input {
-      width:50%; padding:8px; border:none; border-radius:2px;
-    }
+  .wrap{max-width:1200px;margin:14px auto;padding:0 16px;}
 
-    .banner img { width:100%; border-radius:4px; }
-    .banner { padding:10px; }
+  /* NAV */
+  .nav{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 16px;border-radius:12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    position:sticky; top:12px; z-index:40;
+  }
+  .brand{font-weight:700;font-size:20px;color:var(--accent)}
+  .nav-center{flex:1;display:flex;justify-content:center}
+  .search {
+    width:100%; max-width:720px;
+    display:flex; gap:8px; align-items:center;
+    background: rgba(255,255,255,0.02); padding:8px;border-radius:10px;
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .search input{flex:1;border:0;padding:10px 8px;border-radius:6px;outline:none;background:transparent;color:var(--white)}
+  .icon-btn{background:none;border:0;padding:8px;border-radius:8px;cursor:pointer;color:var(--white);font-size:18px}
 
-    .categories {
-      display:flex; overflow-x:auto; gap:15px;
-      padding:10px; background:#fff; margin:10px; border-radius:6px;
-    }
-    .cat { text-align:center; min-width:80px; cursor:pointer; }
-    .cat img { width:70px; height:70px; object-fit:cover; border-radius:50%; }
+  /* layout */
+  .top-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
 
-    .section {
-      background:#fff; margin:10px; padding:10px; border-radius:6px;
-    }
-    .products {
-      display:flex; overflow-x:auto; gap:15px; padding:10px 0;
-    }
-    .card {
-      min-width:160px; border:1px solid #eee;
-      border-radius:6px; padding:10px; text-align:center;
-      background:#fff;
-    }
-    .card img {
-      width:100%; height:130px; object-fit:contain;
-    }
-    .price { color:green; font-weight:bold; }
+  /* Slider */
+  .slider{
+    margin-top:12px;border-radius:12px;overflow:hidden;position:relative;
+    background:#0a0a0a;height:320px; border:1px solid rgba(255,255,255,0.02);
+  }
+  .slides{display:flex;width:300%;height:100%;transition:transform .7s ease}
+  .slides img{width:100%;height:100%;object-fit:cover;display:block}
 
-    @media(max-width:600px){
-      .navbar input { width:60%; }
-      .card { min-width:140px; }
-    }
-  </style>
+  .dots{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;display:flex;gap:8px;z-index:10}
+  .dot{width:10px;height:10px;border-radius:10px;background:rgba(255,255,255,0.15);cursor:pointer}
+  .dot.active{background:var(--accent)}
+
+  /* categories */
+  .cats{display:flex;gap:12px;overflow-x:auto;padding:12px 0;margin-top:14px}
+  .chip{
+    flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:6px;
+    width:92px;padding:10px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid rgba(255,255,255,0.02);cursor:pointer;text-align:center;
+  }
+  .chip img{width:56px;height:56px;border-radius:50%;object-fit:cover}
+
+  /* sections */
+  .section-title{display:flex;justify-content:space-between;align-items:center;margin-top:18px}
+  .section-title h3{margin:0;font-size:18px;color:var(--white)}
+  .section-title small{color:var(--muted)}
+
+  /* grid */
+  #products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px;margin-top:12px}
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px;padding:12px;text-align:center;
+    box-shadow:0 12px 30px rgba(2,6,23,0.6);
+    display:flex;flex-direction:column;gap:10px; border:1px solid rgba(255,255,255,0.02);
+  }
+  .card img{width:100%;height:150px;object-fit:cover;border-radius:8px}
+  .card .name{font-size:14px;min-height:44px;color:var(--white)}
+  .card .meta{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .price{color:var(--accent);font-weight:700}
+
+  /* trending */
+  .trending{display:flex;overflow-x:auto;gap:12px;padding:8px 0}
+  .trend-card{min-width:220px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:12px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,0.6)}
+
+  /* bottom */
+  .bottom-bar{display:none;position:fixed;left:12px;right:12px;bottom:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:12px;padding:10px;box-shadow:0 12px 30px rgba(0,0,0,0.6);justify-content:space-between;align-items:center}
+  .bb-btn{display:flex;flex-direction:column;align-items:center;font-size:12px;color:var(--white)}
+
+  /* pages (home/cart/checkout/success) */
+  .page{display:none}
+  .page.active{display:block}
+
+  /* forms */
+  .form{
+    background: linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.24));
+    padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);
+  }
+  .form input, .form textarea, .form select{
+    width:100%;padding:10px;margin:8px 0;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--white);
+  }
+  .btn-primary{background:var(--accent);color:#fff;padding:10px;border-radius:8px;border:none;cursor:pointer}
+
+  @media(max-width:880px){
+    .slider{height:220px}
+    .nav-center{display:none}
+    .bottom-bar{display:flex}
+  }
+  @media(max-width:520px){
+    .slider{height:160px}
+    .card img{height:120px}
+    .chip{width:84px}
+    #products-grid{grid-template-columns:repeat(2,1fr)}
+  }
+</style>
 </head>
-
 <body>
-<div id="products-container" style="
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 20px;
-"></div>
 
+<div class="wrap">
 
-<div class="navbar">
-  <h2>Shopi</h2>
-  <input type="text" placeholder="Search for products" />
-</div>
+  <!-- NAV -->
+  <div class="nav" role="navigation">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="brand">Shopi</div>
+      <button class="icon-btn" id="darkToggle" title="Toggle dark mode">☀️</button>
+    </div>
 
-<div class="banner">
-  <img src="https://via.placeholder.com/1200x350" alt="Banner">
-</div>
+    <div class="nav-center">
+      <div class="search" role="search">
+        <input id="searchInput" placeholder="Search product name..." oninput="applySearch()" />
+        <button class="icon-btn" onclick="applySearch()" title="Search">🔍</button>
+      </div>
+    </div>
 
-<!-- Categories -->
-<div class="categories">
-  <div class="cat" onclick="showCategory('mobile')">
-    <img src="https:https://share.google/images/0oI0E1qs76Okxmimp">
-    <p>Mobiles</p>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="icon-btn" title="Profile">👤</button>
+      <button class="icon-btn" id="openCartBtn" title="Cart (0)">🛒 <span id="cartCount" style="font-size:12px;margin-left:6px">0</span></button>
+    </div>
   </div>
 
-  <div class="cat" onclick="showCategory('fashion')">
-    <img src="https://share.google/images/0oI0E1qs76Okxmimp/100">
-    <p>Fashion</p>
-  </div>
+  <!-- PAGES: home, cart, checkout, success -->
+  <main id="mainContent">
 
-  <div class="cat" onclick="showCategory('electronics')">
-    <img src="https://via.placeholder.com/100">
-    <p>Electronics</p>
-  </div>
-
-  <div class="cat" onclick="showCategory('kitchen')">
-    <img src="https://via.placeholder.com/100">
-    <p>Kitchen</p>
-  </div>
-
-  <div class="cat" onclick="showCategory('beauty')">
-    <img src="https://via.placeholder.com/100">
-    <p>Beauty</p>
-  </div>
-</div>
-
-<!-- Product Section -->
-<div class="section">
-  <h3 id="sectionTitle">Best Deals</h3>
-  <div class="products" id="productList"></div>
-</div>
-
-<script>
-function loadAllProducts() {
-    let products = JSON.parse(localStorage.getItem("products") || "[]");
-    displayProducts(products, "Best Deals");
-}
-
-function displayProducts(list, title) {
-    document.getElementById("sectionTitle").innerText = title;
-    let box = document.getElementById("productList");
-    box.innerHTML = "";
-
-    if (list.length === 0) {
-      box.innerHTML = "<p style='padding:10px;color:#777;'>No products found</p>";
-      return;
-    }
-
-    list.forEach(p => {
-      box.innerHTML += `
-        <div class="card">
-          <img src="${p.img}">
-          <p>${p.name}</p>
-          <p class="price">₹${p.price}</p>
+    <!-- HOME PAGE -->
+    <section id="home" class="page active">
+      <!-- Slider -->
+      <div class="slider" aria-hidden="false" id="mainSlider">
+        <div class="slides" id="slidesRow">
+          <!-- local uploaded file path (replace with GitHub raw after upload) -->
+          <img src="/mnt/data/0a7b8265-092e-4768-b441-0b87775340a5.jpg" alt="banner1">
+          <img src="https://picsum.photos/1200/420?2" alt="banner2">
+          <img src="https://picsum.photos/1200/420?3" alt="banner3">
         </div>
-      `;
-    });
-}
+        <div class="dots" id="dotsRow"></div>
+      </div>
 
-function showCategory(cat) {
-    let products = JSON.parse(localStorage.getItem("products") || "[]");
-    let filtered = products.filter(p => p.category === cat);
-    displayProducts(filtered, cat.toUpperCase());
-}
+      <!-- Categories -->
+      <div class="cats" id="catsRow">
+        <div class="chip" onclick="filterCategory('all')"><img src="https://picsum.photos/80?1"/><div>All</div></div>
+        <div class="chip" onclick="filterCategory('mobile')"><img src="https://picsum.photos/80?2"/><div>Mobiles</div></div>
+        <div class="chip" onclick="filterCategory('fashion')"><img src="https://picsum.photos/80?3"/><div>Fashion</div></div>
+        <div class="chip" onclick="filterCategory('electronics')"><img src="https://picsum.photos/80?4"/><div>Electronics</div></div>
+        <div class="chip" onclick="filterCategory('kitchen')"><img src="https://picsum.photos/80?5"/><div>Kitchen</div></div>
+        <div class="chip" onclick="filterCategory('beauty')"><img src="https://picsum.photos/80?6"/><div>Beauty</div></div>
+      </div>
 
-loadAllProducts();
-</script>
+      <!-- Deals -->
+      <div class="section-title"><h3>Deals of the Day</h3><small>🔥 Limited time offers</small></div>
+      <div class="deals">
+        <div class="deal"><h4>Up to 50% off on selected items</h4><p>Flash sale — Hurry!</p></div>
+        <div class="deal"><h4>Buy 1 Get 1</h4><p>Selected fashion items</p></div>
+      </div>
+
+      <!-- Trending -->
+      <div class="section-title" style="margin-top:18px"><h3>Trending</h3><small>Popular picks</small></div>
+      <div class="trending" id="trendingRow"></div>
+
+      <!-- Products -->
+      <div class="section-title"><h3>Latest Products</h3><small>All items</small></div>
+      <div id="products-grid"></div>
+    </section>
+
+    <!-- CART PAGE -->
+    <section id="cart" class="page">
+      <div class="section-title"><h3>Your Cart</h3><small>Review items</small></div>
+      <div id="cartContent" class="form"></div>
+      <div style="margin-top:12px;display:flex;gap:12px">
+        <button class="btn-primary" onclick="goToCheckout()">Place Order</button>
+        <button class="btn-primary" style="background:#444" onclick="showPage('home')">Continue Shopping</button>
+      </div>
+    </section>
+
+    <!-- CHECKOUT / ORDER FORM -->
+    <section id="checkout" class="page">
+      <div class="section-title"><h3>Checkout</h3><small>Enter delivery details</small></div>
+      <div class="form" id="checkoutForm">
+        <input id="custName" placeholder="Full name" />
+        <input id="custPhone" placeholder="Mobile number" />
+        <textarea id="custAddress" placeholder="Full address"></textarea>
+        <input id="custPincode" placeholder="Pincode" />
+        <select id="paymentMethod">
+          <option value="cod">Cash on Delivery (COD)</option>
+          <option value="upi">UPI / Online</option>
+        </select>
+        <div style="display:flex;gap:10px;margin-top:8px">
+          <button class="btn-primary" onclick="submitOrder()">Submit Order</button>
+          <button class="btn-primary" style="background:#444" onclick="showPage('cart')">Back to Cart</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ORDER SUCCESS -->
+    <section id="success" class="page">
+      <div class="section-title"><h3>Order Placed</h3><small>Thank you</small></div>
+      <div class="form" id="successContent">
+        <p>Your order has been placed successfully.</p>
+        <p id="orderSummary"></p>
+        <button class="btn-primary" onclick="showPage('home')">Back to Home</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- bottom bar (mobile) -->
+<div class="bottom-bar" role="navigation">
+  <div class="bb-btn" onclick="showPage('home')">🏠<div>Home</div></div>
+  <div class="bb-btn" onclick="document.getElementById('searchInput').focus()">🔍<div>Search</div></div>
+  <div class="bb-btn" onclick="showPage('cart')">🛒<div>Cart</div></div>
+  <div class="bb-btn">👤<div>Account</div></div>
+</div>
+
 <script>
-  const db = firebase.database().ref("products");
+/* ===== Slider (auto + dots) ===== */
+const slidesRow = document.getElementById('slidesRow');
+const dotsRow = document.getElementById('dotsRow');
+const slidesCount = slidesRow.children.length;
+let currentSlide = 0;
+function buildDots(){
+  dotsRow.innerHTML = '';
+  for(let i=0;i<slidesCount;i++){
+    const d = document.createElement('div');
+    d.className = 'dot' + (i===0?' active':'');
+    d.dataset.i = i;
+    d.onclick = () => goToSlide(i);
+    dotsRow.appendChild(d);
+  }
+}
+function goToSlide(i){
+  currentSlide = i;
+  slidesRow.style.transform = `translateX(-${i * 100}%)`;
+  Array.from(dotsRow.children).forEach((el,idx)=> el.classList.toggle('active', idx===i));
+}
+function autoSlide(){ currentSlide = (currentSlide + 1) % slidesCount; goToSlide(currentSlide); }
+buildDots();
+let sliderInterval = setInterval(autoSlide, 4000);
+document.getElementById('mainSlider').addEventListener('mouseenter', ()=> clearInterval(sliderInterval));
+document.getElementById('mainSlider').addEventListener('mouseleave', ()=> sliderInterval = setInterval(autoSlide, 4000));
 
-  db.on("value", snapshot => {
-    const container = document.getElementById("products-container");
-    container.innerHTML = "";
+/* ===== Pages show utility ===== */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) el.classList.add('active');
+  // update bottom nav visibility on small screens:
+  document.querySelectorAll('.bottom-bar').forEach(b=> b.style.display = (window.innerWidth <= 880 && id === 'home') ? 'flex' : (window.innerWidth <= 880 ? 'flex' : 'none'));
 
+  // slight scroll to top
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ===== Firebase products load (reads p.img) ===== */
+let allProducts = [];
+function loadProducts(){
+  firebase.database().ref('products').on('value', snapshot => {
+    allProducts = [];
     snapshot.forEach(child => {
-      const product = child.val();
-
-      const card = `
-        <div style="
-          width: 200px;
-          border: 1px solid #ddd; 
-          border-radius: 10px; 
-          padding: 10px; 
-          text-align: center;
-          background: #fff;">
-          
-          <img src="${product.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
-          
-          <h3 style="font-size: 18px; margin: 10px 0;">${product.name}</h3>
-          <p style="color: green; font-size: 16px;">₹${product.price}</p>
-
-          <button style="
-            background: black;
-            color: white;
-            padding: 10px;
-            width: 100%;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;">
-            Add to Cart
-          </button>
-        </div>
-      `;
-
-      container.innerHTML += card;
+      const raw = child.val();
+      allProducts.push({
+        id: raw.id || child.key,
+        name: raw.name || 'Untitled',
+        img: raw.img || raw.image || 'https://via.placeholder.com/400x300?text=No+Image',
+        price: raw.price || '0',
+        category: raw.category || 'all'
+      });
     });
+    renderAll();
+    updateCartCount();
+  }, err => {
+    console.error('Firebase error', err);
+    document.getElementById('products-grid').innerHTML = '<p style="padding:18px;color:#777">Unable to load products</p>';
   });
+}
+
+/* ===== Render functions ===== */
+function renderAll(){
+  renderTrending();
+  renderGrid(allProducts);
+}
+function renderTrending(){
+  const tr = document.getElementById('trendingRow');
+  const items = allProducts.slice(0,6);
+  tr.innerHTML = items.map(p => `
+    <div class="trend-card">
+      <img src="${escapeHtml(p.img)}" style="width:100%;height:110px;object-fit:cover;border-radius:8px" />
+      <div style="margin-top:8px;font-weight:600">${escapeHtml(p.name)}</div>
+      <div style="color:var(--accent);margin-top:6px">₹${escapeHtml(p.price)}</div>
+    </div>
+  `).join('');
+}
+function renderGrid(list){
+  const grid = document.getElementById('products-grid');
+  if(!list || list.length === 0){ grid.innerHTML = '<p style="padding:18px;color:#777">No products found</p>'; return; }
+  grid.innerHTML = list.map(p => `
+    <div class="card" data-cat="${escapeHtml(p.category)}">
+      <img src="${escapeHtml(p.img)}" alt="${escapeHtml(p.name)}" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x300?text=No+Image'"/>
+      <div class="name">${escapeHtml(p.name)}</div>
+      <div class="meta">
+        <div class="price">₹${escapeHtml(p.price)}</div>
+        <button class="btn-primary" onclick="addToCart('${escapeHtml(p.id)}')">Add</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ===== Search & category filter ===== */
+function applySearch(){ const q = document.getElementById('searchInput').value.trim().toLowerCase(); const filtered = allProducts.filter(p => p.name.toLowerCase().includes(q)); renderGrid(filtered); }
+function filterCategory(cat){ if(cat==='all'){renderGrid(allProducts);return;} const filtered = allProducts.filter(p => p.category===cat); renderGrid(filtered); }
+
+/* ===== Cart functions (localStorage) ===== */
+const CART_KEY = 'shopi_cart';
+function readCart(){ try{ return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); }catch(e){ return []; } }
+function writeCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); updateCartCount(); }
+function updateCartCount(){ const c = readCart(); document.getElementById('cartCount').innerText = c.length; document.getElementById('openCartBtn').title = `Cart (${c.length})`; }
+
+function addToCart(productId){
+  // find product
+  const prod = allProducts.find(x => x.id == productId);
+  if(!prod){ alert('Product not found'); return; }
+  let cart = readCart();
+  // check if exists => increase qty
+  const idx = cart.findIndex(i => i.id == prod.id);
+  if(idx === -1) cart.push({ ...prod, qty: 1 });
+  else cart[idx].qty += 1;
+  writeCart(cart);
+  // go to cart page as requested
+  showCart();
+}
+
+/* Show cart page and render cart items */
+function showCart(){
+  showPage('cart');
+  const cart = readCart();
+  const content = document.getElementById('cartContent');
+  if(cart.length === 0){
+    content.innerHTML = '<p>Your cart is empty. Go add some products.</p>';
+    return;
+  }
+  let subtotal = 0;
+  content.innerHTML = cart.map((it, i) => {
+    subtotal += Number(it.price) * (it.qty || 1);
+    return `
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px">
+        <img src="${escapeHtml(it.img)}" style="width:90px;height:70px;object-fit:cover;border-radius:8px"/>
+        <div style="flex:1">
+          <div style="font-weight:600">${escapeHtml(it.name)}</div>
+          <div style="color:var(--muted);font-size:13px">₹${escapeHtml(it.price)} x ${it.qty || 1}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+          <button onclick="changeQty(${i},1)" class="btn-primary" style="padding:6px 8px">+</button>
+          <button onclick="changeQty(${i},-1)" class="btn-primary" style="padding:6px 8px;background:#444">-</button>
+          <button onclick="removeFromCart(${i})" style="margin-top:6px;background:transparent;border:0;color:#f66;cursor:pointer">Remove</button>
+        </div>
+      </div>
+    `;
+  }).join('') + `<div style="margin-top:8px;font-weight:700">Subtotal: ₹${subtotal}</div>`;
+}
+
+/* change quantity */
+function changeQty(index, delta){
+  let cart = readCart();
+  if(!cart[index]) return;
+  cart[index].qty = Math.max(1, (cart[index].qty||1) + delta);
+  writeCart(cart);
+  showCart();
+}
+function removeFromCart(index){
+  let cart = readCart();
+  cart.splice(index,1);
+  writeCart(cart);
+  showCart();
+}
+
+/* go to checkout (show checkout form) */
+function goToCheckout(){
+  const cart = readCart();
+  if(cart.length === 0){ alert('Cart is empty'); return; }
+  showPage('checkout');
+  // prefill name if saved in localStorage
+  const saved = JSON.parse(localStorage.getItem('shopi_customer') || '{}');
+  document.getElementById('custName').value = saved.name || '';
+  document.getElementById('custPhone').value = saved.phone || '';
+  document.getElementById('custAddress').value = saved.address || '';
+  document.getElementById('custPincode').value = saved.pincode || '';
+}
+
+/* submit order -> save to Firebase orders and localStorage */
+function submitOrder(){
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress').value.trim();
+  const pincode = document.getElementById('custPincode').value.trim();
+  const payment = document.getElementById('paymentMethod').value;
+  if(!name || !phone || !address || !pincode){ alert('Please fill all details'); return; }
+
+  const cart = readCart();
+  if(cart.length === 0){ alert('Cart is empty'); return; }
+
+  // generate simple order id
+  const orderId = 'ORD' + Date.now().toString().slice(-6);
+
+  const order = {
+    id: orderId,
+    customer: { name, phone, address, pincode },
+    payment: payment,
+    items: cart,
+    subtotal: cart.reduce((s,i)=> s + Number(i.price)*(i.qty||1), 0),
+    createdAt: new Date().toISOString()
+  };
+
+  // save to Firebase orders node
+  const ordersRef = firebase.database().ref('orders');
+  const newRef = ordersRef.push();
+  newRef.set(order).then(()=>{
+    // save local copy
+    const prev = JSON.parse(localStorage.getItem('shopi_orders') || '[]');
+    prev.push(order);
+    localStorage.setItem('shopi_orders', JSON.stringify(prev));
+    // save customer details for next time
+    localStorage.setItem('shopi_customer', JSON.stringify({ name, phone, address, pincode }));
+    // clear cart
+    localStorage.removeItem(CART_KEY);
+    updateCartCount();
+    // show success page
+    document.getElementById('orderSummary').innerHTML = `<strong>Order ID:</strong> ${orderId}<br><strong>Total:</strong> ₹${order.subtotal}`;
+    showPage('success');
+  }).catch(err=>{
+    console.error('Order save error', err);
+    alert('Unable to place order. Please try again.');
+  });
+}
+
+/* ===== misc utils ===== */
+function escapeHtml(s){ if(!s) return ''; return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+
+/* ===== dark mode toggle (default dark) ===== */
+const darkToggle = document.getElementById('darkToggle');
+function initDarkMode(){
+  // default: dark; toggle button shows sun when dark
+  const saved = localStorage.getItem('shopi_theme');
+  if(saved === 'light'){ document.body.classList.remove('dark'); darkToggle.textContent = '🌙'; }
+  else { document.body.classList.add('dark'); darkToggle.textContent = '☀️'; }
+}
+darkToggle.addEventListener('click', ()=>{
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  darkToggle.textContent = isDark ? '☀️' : '🌙';
+  localStorage.setItem('shopi_theme', isDark ? 'dark' : 'light');
+});
+
+/* open cart button */
+document.getElementById('openCartBtn').addEventListener('click', ()=> showCart());
+
+/* startup */
+initDarkMode();
+loadProducts();
+updateCartCount();
+
+/* show home when loaded */
+showPage('home');
+
 </script>
-
-
 </body>
 </html>
